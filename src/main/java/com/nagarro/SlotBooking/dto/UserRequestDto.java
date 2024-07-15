@@ -8,5 +8,4 @@ import java.util.List;
 public class UserRequestDto {
 
     private LocationDto location;
-    private List<SlotDto> slots;
 }

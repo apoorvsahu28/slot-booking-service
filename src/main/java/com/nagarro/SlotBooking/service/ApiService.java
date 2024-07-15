@@ -6,5 +6,5 @@ import java.util.Map;
 
 public interface ApiService {
 
-    Map<String, Object> forwardRequest(UserRequestDto userRequest);
+    Map<String, Object> forwardRequest(UserRequestDto userRequest, Map<String, String> headers);
 }

@@ -6,10 +6,7 @@ import com.nagarro.SlotBooking.service.ApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -24,8 +21,11 @@ public class ApiController {
     }
 
     @PostMapping("/forward")
-    public ResponseEntity<Map<String, Object>> forwardRequest(@RequestBody UserRequestDto userRequest) {
-        Map<String, Object> response = apiService.forwardRequest(userRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    public ResponseEntity<Map<String, Object>> forwardRequest(
+            @RequestHeader Map<String, String> headers,
+            @RequestBody UserRequestDto userRequest) {
+
+            Map<String, Object> response = apiService.forwardRequest(userRequest, headers);
+            return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
