@@ -8,6 +8,8 @@ import com.nagarro.SlotBooking.service.ApiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -21,14 +23,25 @@ public class ApiServiceImpl implements ApiService {
     @Value("${api.url}")
     private String apiUrl;
 
-    private final String[] headerValues = {"authorization","x-client-id","x-client-version","x-account-id","x-account-name","x-company-id","x-company-name"};
+    @Value("${auth.url}")
+    private String authUrl;
+
+    @Value("${auth.clientId}")
+    private String clientId;
+
+    @Value("${auth.clientSecret}")
+    private String clientSecret;
+
+    private final String[] headerValues = {"x-client-id","x-client-version","x-account-id","x-account-name","x-company-id","x-company-name"};
     private final List<String> headerValuesList = Arrays.asList(headerValues);
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Override
     public Map<String, Object> forwardRequest(UserRequestDto userRequest, Map<String, String> headers) {
         try {
-            HttpHeaders httpHeaders = buildHeaders(headers);
+            String accessToken = fetchAccessToken();
+            HttpHeaders httpHeaders = buildHeaders(headers, accessToken);
             Map<String, Object> requestBody = buildRequestBody(userRequest);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, httpHeaders);
@@ -44,13 +57,40 @@ public class ApiServiceImpl implements ApiService {
         }
     }
 
-    private HttpHeaders buildHeaders(Map<String, String> headers) {
+    private String fetchAccessToken() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("grant_type", "client_credentials");
+        requestBody.add("client_id", clientId);
+        requestBody.add("client_secret", clientSecret);
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+        ResponseEntity<Map> response = restTemplate.exchange(
+                authUrl,
+                HttpMethod.POST,
+                requestEntity,
+                Map.class
+        );
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            Map<String, Object> responseBody = response.getBody();
+            return (String) responseBody.get("access_token");
+        } else {
+            throw new ApiException("Failed to fetch access token");
+        }
+
+    }
+
+    private HttpHeaders buildHeaders(Map<String, String> headers, String accessToken) {
         HttpHeaders httpHeaders = new HttpHeaders();
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             if(headerValuesList.contains(entry.getKey())){
                 httpHeaders.set(entry.getKey(), entry.getValue());
             }
         }
+        httpHeaders.setBearerAuth(accessToken);
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return httpHeaders;
     }

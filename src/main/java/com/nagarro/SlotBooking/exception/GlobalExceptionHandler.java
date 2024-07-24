@@ -14,14 +14,22 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(ApiException exception,
-                                                                            WebRequest webRequest) {
+    public ResponseEntity<ErrorResponseDto> handleApiException(ApiException exception, WebRequest webRequest) {
+        return buildErrorResponse(exception, HttpStatus.INTERNAL_SERVER_ERROR, webRequest);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponseDto> handleAuthenticationException(AuthenticationException exception, WebRequest webRequest) {
+        return buildErrorResponse(exception, HttpStatus.UNAUTHORIZED, webRequest);
+    }
+
+    private ResponseEntity<ErrorResponseDto> buildErrorResponse(Exception exception, HttpStatus status, WebRequest webRequest) {
         ErrorResponseDto errorResponseDTO = new ErrorResponseDto(
                 webRequest.getDescription(false),
-                HttpStatus.INTERNAL_SERVER_ERROR,
+                status,
                 exception.getMessage(),
                 LocalDateTime.now()
         );
-        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, status);
     }
 }
