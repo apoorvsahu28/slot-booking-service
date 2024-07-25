@@ -1,6 +1,9 @@
 package com.nagarro.SlotBooking.service.impl;
 
 import com.nagarro.SlotBooking.dto.AuthenticationResponse;
+import com.nagarro.SlotBooking.dto.LoginRequestDto;
+import com.nagarro.SlotBooking.dto.RegistrationRequestDto;
+import com.nagarro.SlotBooking.dto.UserResponseDto;
 import com.nagarro.SlotBooking.exception.AuthenticationException;
 import com.nagarro.SlotBooking.model.User;
 import com.nagarro.SlotBooking.repository.UserRepository;
@@ -27,7 +30,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse authenticate(User request) {
+    public AuthenticationResponse authenticate(LoginRequestDto request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -46,11 +49,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public User register(User request) {
+    public UserResponseDto register(RegistrationRequestDto request) {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRoles(request.getRoles());
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return new UserResponseDto(savedUser.getId(), savedUser.getUsername(), savedUser.getRoles());
     }
 }

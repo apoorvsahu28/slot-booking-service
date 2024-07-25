@@ -66,6 +66,6 @@ public class ApiController {
             @RequestBody UserRequestDto userRequest) {
 
             Map<String, Object> response = apiService.forwardRequest(userRequest, headers);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
