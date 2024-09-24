@@ -115,11 +115,13 @@ public class ApiServiceImpl implements ApiService {
         requestBody.put("job", job);
 
         Map<String, Object> resources = new HashMap<>();
-        Map<String, Object> filters = new HashMap<>();
-        filters.put("includeInternalPersons", ApiConstants.INCLUDE_INTERNAL_PERSONS);
-        filters.put("includeCrowdPersons", ApiConstants.INCLUDE_CROWD_PERSONS);
-        filters.put("includeMandatorySkills", ApiConstants.INCLUDE_MANDATORY_SKILLS);
-        resources.put("filters", filters);
+        String[] personIds = new String[]{"3596E439BF074BA89DA798009A6F0763"};
+        resources.put("personIds", personIds);
+//        Map<String, Object> filters = new HashMap<>();
+//        filters.put("includeInternalPersons", ApiConstants.INCLUDE_INTERNAL_PERSONS);
+//        filters.put("includeCrowdPersons", ApiConstants.INCLUDE_CROWD_PERSONS);
+//        filters.put("includeMandatorySkills", ApiConstants.INCLUDE_MANDATORY_SKILLS);
+//        resources.put("filters", filters);
         requestBody.put("resources", resources);
 
         List<Map<String, String>> slots = generateSlots();
@@ -136,18 +138,28 @@ public class ApiServiceImpl implements ApiService {
         List<Map<String, String>> slots = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        for (int i = 1; i <= SlotConstants.SLOT_DAYS; i++) {
-            LocalDateTime start = LocalDateTime.now().plusDays(i).withHour(SlotConstants.SLOT_START_HOUR).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime end = start.plusHours(SlotConstants.SLOT_DURATION_HOURS);
+        for (int day = 1; day <= SlotConstants.SLOT_DAYS; day++) {
+            LocalDateTime start = LocalDateTime.now().plusDays(day + 2)
+                    .withHour(SlotConstants.SLOT_START_HOUR)
+                    .withMinute(0).withSecond(0).withNano(0);
 
-            Map<String, String> slot = new HashMap<>();
-            slot.put("start", start.format(formatter) + "Z");
-            slot.put("end", end.format(formatter) + "Z");
-            slots.add(slot);
+            for (int slotCount = 0; slotCount < SlotConstants.SLOTS_PER_DAY; slotCount++) {
+                LocalDateTime end = start.plusHours(SlotConstants.SLOT_DURATION_HOURS);
+
+                if (start.getHour() == SlotConstants.GAP_START_HOUR) {
+                    start = start.withHour(SlotConstants.GAP_END_HOUR);
+                    end = start.plusHours(SlotConstants.SLOT_DURATION_HOURS);
+                }
+
+                Map<String, String> slot = new HashMap<>();
+                slot.put("start", start.format(formatter) + "Z");
+                slot.put("end", end.format(formatter) + "Z");
+                slots.add(slot);
+
+                start = end;
+            }
         }
-
         return slots;
     }
-
-
+    
 }
